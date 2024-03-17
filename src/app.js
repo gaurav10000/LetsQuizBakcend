@@ -10,10 +10,11 @@ app.use(express.urlencoded({extended: true})) // we use express.urlencoded to pa
 
 // routes import 
 import userRouter from './routes/user.routes.js'
-
+import quizRouter from './routes/quiz.routes.js'
 
 // routes 
 app.use('/api/v1/users', userRouter)
+app.use('/api/v1/quiz', quizRouter)
 
 
 
