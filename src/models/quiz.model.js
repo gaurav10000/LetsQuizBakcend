@@ -6,51 +6,17 @@ const quizSchema = new Schema({
         required: true,
         unique: true,
         trim: true,
-        minlength: 6,
-        index: true
+        index: true,
     },
-    title: {
+    quizTitle: {
         type: String,
         required: true,
         trim: true,
-        minlength: 6,
     },
-    questions: [
-        {
-            _id: {
-                type: Number,
-                required: true,
-                unique: true,
-                index: true,
-            },
-            isMultiCorrect: {
-                type: Boolean,
-                required: true
-            },
-            question: {
-                type: String, // this can be a text
-                required: true,
-                trim: true,
-            },
-            questionImage: { 
-                type: String, // this will be a URL to the image
-                trim: true
-            },
-            options: [
-                {
-                    option: {
-                        type: String,
-                        required: true,
-                        trim: true
-                    },
-                    isCorrect: {
-                        type: Boolean,
-                        default: false
-                    }
-                }
-            ]
-        }
-    ],
+    subject: {
+        type: String,
+        trim: true,
+    },
     createdBy: {
         type: Schema.Types.ObjectId,
         ref: "User",
@@ -71,7 +37,7 @@ const quizSchema = new Schema({
     },
     totalTimeLimit: {
         type: Number, // it will be in minutes
-        required: true
+        // required: true
     }
 }, {timestamps: true});
 

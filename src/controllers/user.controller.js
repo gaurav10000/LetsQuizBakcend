@@ -3,8 +3,8 @@ import { ApiError } from '../utils/apiError.js'
 import {User} from '../models/user.model.js'
 import { uploadOnCloudinary } from '../utils/cloudinaryFileUpload.js'
 import { ApiResponse } from '../utils/apiResponse.js'
-import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken'
+import bcrypt from 'bcrypt';
 
 
 
@@ -45,24 +45,22 @@ const registerUser = asyncHandler(async(req, res) => {
     }
 
     const avatarLocalPath = req.files?.avatar[0]?.path;
-    const coverImageLocalPath = req.files?.coverImage?req.files.coverImage[0].path:"";
-
+    // const coverImageLocalPath = req.files?.coverImage?req.files.coverImage[0].path:"";
 
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar file is required!")
     }
 
     const avatarUploadResponse = await uploadOnCloudinary(avatarLocalPath)
-    const coveImageUploadResponse = await uploadOnCloudinary(coverImageLocalPath)
+    // const coveImageUploadResponse = await uploadOnCloudinary(coverImageLocalPath)
 
     if (!avatarUploadResponse.url) {
         throw new ApiError(400, "Avatar file is required!")
     }
-
     const user = await User.create({
         fullname,
         avatar: avatarUploadResponse.url,
-        coverImage: coveImageUploadResponse?.url || "",
+        // coverImage: coveImageUploadResponse?.url || "",
         email,
         password,
         username: username.toLowerCase()
@@ -71,13 +69,12 @@ const registerUser = asyncHandler(async(req, res) => {
     const createdUser = await User.findById(user._id).select(
         "-password -refreshToken"
     )
-
     if (!createdUser) {
         throw new ApiError(500, "Something went wrong while creating user!")
     }
 
     return res.status(201).json(
-        new ApiResponse(200, createdUser, "User registered Successfully!")
+        new ApiResponse(201, createdUser, "User registered Successfully!")
     )
 })
 
@@ -106,21 +103,31 @@ const loginUser = asyncHandler(async(req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: true
+        secure: true,
+        path: "/",
+        sameSite: 'none',
     }
     
-    return res.status(200)
-              .cookie("accessToken", accessToken, options)
-              .cookie("refreshToken", refreshToken, options)
-              .json(
-                new ApiResponse(
-                    200,
-                    {
-                        user: user, accessToken, refreshToken
+    res.status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user: {
+                        id: user._id,
+                        username: user.username,
+                        email: user.email,
+                        avatar: user.avatar,
+                        fullname: user.fullname
                     },
-                    "User logged in successfully!"
+                    accessToken: accessToken,
+                    refreshToken: refreshToken
+                },
+                "User logged in successfully!"
                 )
-            )
+        )
 })
 
 const logoutUser = asyncHandler(async(req, res) => {
@@ -137,7 +144,9 @@ const logoutUser = asyncHandler(async(req, res) => {
     )
     const options = {
         httpOnly: true,
-        secure: true
+        secure: true,
+        path: "/",
+        sameSite: 'none',
     }
 
     return res.status(200)
@@ -187,9 +196,71 @@ const refreshAccessToken = asyncHandler(async(req, res) => {
 
 })
 
+const updateUser = asyncHandler(async(req, res) => {
+    const {fullname, email, username, password} = req.body
+
+    const user = await User.findById(req.user._id)
+
+    
+    if (!user) {
+        throw new ApiError(404, "User not found!")
+    }
+    
+    // check if changed username already exists? also for email
+
+    if (user.username != username) {
+        const existingUser = await User.findOne({username}).select("-password -refreshToken")
+        if (existingUser) {
+            throw new ApiError(409, "User with same username found! Please use some different username.")
+        }
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(user._id, {
+        fullname: fullname,
+        email: email,
+        username: username,
+        password: password != "NoChange" ? bcrypt.hashSync(password, 10) : user.password
+    }, {
+        new: true,
+    })
+
+
+    if (!updatedUser) {
+        throw new ApiError(500, "Something went wrong while updating user!")                      
+    }
+
+    res.status(200).json(
+        new ApiResponse(200, updatedUser, "User updated successfully!")
+    )
+
+})
+
+const userDetails = asyncHandler(async(req, res) => {
+    const user = await User.findById(req.user._id).select("-password -refreshToken")
+
+    if (!user) {
+        throw new ApiError(404, "User not find!")
+    }
+    res.status(200).json(
+        new ApiResponse(200, user, "User found!")
+    )
+})
+
+const isLoggedIn = asyncHandler(async(req, res) => {
+    const user = req.user
+    if (!user) {
+        throw new ApiError(401, "User is not logged in.")
+    }
+
+    res.status(200).json(new ApiResponse(200, {}, "User is already logged in."))
+})
+
 export {
     registerUser,
     loginUser,  
     logoutUser,
-    refreshAccessToken
+    refreshAccessToken,
+    userDetails,
+    updateUser,
+    isLoggedIn
 }
