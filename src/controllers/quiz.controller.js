@@ -8,9 +8,9 @@ import { ApiResponse } from "../utils/apiResponse.js";
 const createQuiz = asyncHandler(async(req, res) => {
     const { quizCode, quizTitle, subject, availableAfter, availableTill, totalTimeLimit } = req.body
     const id = req.user._id // this is the id of the user who is creating the quiz
-    console.log(id);
+    // console.log(id);
 
-    if (!(quizCode && quizTitle && availableAfter && availableTill && totalTimeLimit)) {
+    if (!(quizCode && quizTitle && availableAfter && availableTill, totalTimeLimit)) {
         throw new ApiError(400, "All fields are required")
     }
 
@@ -31,7 +31,6 @@ const createQuiz = asyncHandler(async(req, res) => {
             throw new ApiError(409, "Quiz with same quizCode already exists!n")
         }
     })
-
 
     return res.status(201)
               .json(new ApiResponse(
@@ -84,6 +83,17 @@ const getActiveQuizzes = asyncHandler(async(req, res) =>{
               ))
 })
 
+const getUpcomingQuizzes = asyncHandler(async(req, res) => {
+    const upcomingQuizzes = await Quiz.find({availableAfter: {$gt: new Date()}})
+
+    return res.status(200)
+              .json(new ApiResponse(
+                200,
+                upcomingQuizzes,
+                "Upcoming quizzes fetched successfully!"
+              ))
+})
+
 const getQuizzesICreated = asyncHandler(async(req, res) => {
     const id = req.user._id;
 
@@ -115,11 +125,45 @@ const deleteQuiz = asyncHandler(async(req, res) => {
     res.status(200).json(new ApiResponse(200, deletedQuiz, "Quiz Deleted Successfully!"))
 })
 
+const getQuizDetails = asyncHandler(async(req, res) => {
+    const quizCode = req.params.quizCode
+    // console.log(quizCode);
+    const quizDetails = await Quiz.findOne({
+        quizCode
+    })
+
+    // console.log(
+    //     quizDetails
+    // );
+
+    if (!quizDetails) {
+        throw new ApiError(404, "No quiz found!")
+    }
+
+    res.status(200).json(new ApiResponse(200, quizDetails, "Quiz found!"))
+})
+
+const doesQuizExist = asyncHandler(async(req, res) => { 
+    const quizCode = req.params.quizCode
+
+    const quiz = await Quiz.findOne({quizCode})
+
+    if (!quiz) {
+        throw new ApiError(404, "No quiz found!")
+    }
+
+    res.status(200).json(new ApiResponse(200, quiz, "Quiz found!"))
+
+})
+
 
 export {
     createQuiz,
     addQuestionToQuiz,
     getActiveQuizzes,
     getQuizzesICreated,
-    deleteQuiz
+    deleteQuiz,
+    doesQuizExist,
+    getUpcomingQuizzes,
+    getQuizDetails
 }

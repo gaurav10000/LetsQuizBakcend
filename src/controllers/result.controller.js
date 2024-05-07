@@ -4,7 +4,7 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 
-const getResult = asyncHandler(async(req, res) => {
+const getMyResult = asyncHandler(async(req, res) => {
     const {quizCode} = req.params
     const userId = req.user._id
     const result = await Result.findOne({
@@ -60,7 +60,7 @@ const fetchLeaderboard = asyncHandler(async(req, res) => {
 })
 
 export {
-    getResult,
+    getMyResult,
     getQuizzesIAttempted,
     doneWithQuiz,
     fetchLeaderboard

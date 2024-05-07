@@ -120,9 +120,29 @@ const getAllSubmittedSolutionsForAQuiz = asyncHandler(async(req, res) => {
     res.status(200).json(new ApiResponse(200, solutions, "Solutions for requested quiz!"))
 })
 
+const getQuizSolutionsOfAStudent = asyncHandler(async(req, res) => {
+    const quizCode = req.params.quizCode
+    const userId = req.params.userId
+
+    if (!quizCode || !userId) {
+        throw new ApiError(400, "Please provide both quiz code and user id.")
+    }
+
+    const solutions = await Solution.find({
+        $and: [{quizCode}, {userId}]
+    }).populate("questionId")
+
+    if (!solutions) {
+        throw new ApiError(404, "No solutions found for the requested quiz!")
+    }
+
+    res.status(200).json(new ApiResponse(200, solutions, "Solutions for requested quiz!"))
+})
+
 export {
     submitSolution,
     getsubmittedSolutionforAQuestion,
-    getAllSubmittedSolutionsForAQuiz
+    getAllSubmittedSolutionsForAQuiz,
+    getQuizSolutionsOfAStudent
 }
 
