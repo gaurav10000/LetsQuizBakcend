@@ -8,7 +8,7 @@ app.use(cookieParser())
 app.use(express.static('public'))
 app.use(express.urlencoded({extended: true})) // we use express.urlencoded to parse form data that is sent in the request body from the client side to the server side in a POST request or a PUT request. The extended option allows to choose between parsing the URL-encoded data with the querystring library (when false) or the qs library (when true). The "extended" syntax allows for rich objects and arrays to be encoded into the URL-encoded format, allowing for a JSON-like experience with URL-encoded.
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: "https://dulcet-entremet-7b04a7.netlify.app",
     credentials: true,
 }))
 
@@ -29,8 +29,7 @@ app.use('/api/v1/result', resultRouter)
 
 // default route
 app.get('/', (req, res) => {
-    console.log(req.cookies);
-    res.clearCookie("accessToken").json({message: "Welcome to the Quiz App"})
+    res.json({message: "Welcome to Quiz App"})
 })
 
 export default app
